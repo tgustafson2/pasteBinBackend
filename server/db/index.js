@@ -5,7 +5,7 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     password: process.env.MYSQL_PASSWORD,
     user: process.env.MYSQL_USER,
-    database: "pastebin",
+    database: process.env.MYSQL_DATABASE,
     host: 'localhost',
     port: '3306'
 });
@@ -36,8 +36,30 @@ pastesdb.insert = (shortlink, expir, created, paste_path) => {
 
 pastesdb.remove = () =>{
     return new Promise((resolve, reject) => {
-        let sql = "DELETE FROM pastebin.pastes WHERE TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP(), created_at)> expiration_length_in_minutes AND expiration_length_in_minutes>0";
+        let sql = `DELETE FROM pastebin.pastes WHERE TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP(), created_at)> expiration_length_in_minutes AND expiration_length_in_minutes>"0"`;
 
+        let result =  pool.query(sql,(err, results) =>{
+            if(err){
+                return reject(err);
+            }
+            console.log("Delete files");
+            return resolve(results);
+        });
+
+
+
+    })
+}
+pastesdb.findRemove = () =>{
+    return new Promise((resolve, reject) => {
+        let search = `SELECT paste_path FROM pastebin.pastes WHERE TIMESTAMPDIFF(MINUTE, CURRENT_TIMESTAMP(), created_at)> expiration_length_in_minutes AND expiration_length_in_minutes>"0"`;
+        pool.query (search, (err, results) => {
+            if(err){
+                return reject(err);
+            }
+            console.log("Found files");
+            return resolve(results);
+        })
     })
 }
 
